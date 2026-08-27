@@ -1,0 +1,17 @@
+{
+  "name": "Eliena AI — Personal AI Assistant",
+  "short_name": "ELIENA",
+  "description": "Eliena is a personal AI assistant.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070a12",
+  "theme_color": "#090d18",
+  "icons": [
+    {
+      "src": "/assets/eliena-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

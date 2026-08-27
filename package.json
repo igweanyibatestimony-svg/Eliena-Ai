@@ -1,0 +1,20 @@
+{
+  "name": "eliena-ai",
+  "version": "0.1.0",
+  "description": "Eliena AI personal assistant foundation",
+  "private": true,
+  "type": "module",
+  "main": "server/app.js",
+  "scripts": {
+    "dev": "node --watch server/app.js",
+    "start": "node server/app.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  }
+}

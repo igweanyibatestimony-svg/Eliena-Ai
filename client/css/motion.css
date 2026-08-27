@@ -1,0 +1,14 @@
+@keyframes page-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes orb-breathe { 0%,100% { transform: scale(.98); } 50% { transform: scale(1.04); } }
+@keyframes orb-listening { 50% { transform: scale(1.1); filter: brightness(1.25); box-shadow: 0 0 70px rgba(132,243,198,.58); } }
+@keyframes orb-thinking { to { transform: rotate(360deg) scale(1.02); } }
+@keyframes orb-responding { 50% { transform: scale(1.06) rotate(-7deg); filter: saturate(155%); } }
+@keyframes orb-working { to { transform: rotate(360deg); } }
+@keyframes orb-error { 25%,75% { transform: translateX(-8px); } 50% { transform: translateX(8px); } }
+@keyframes orbit-ring { to { transform: rotate(360deg); } }
+@keyframes morph { 50% { border-radius: 61% 39% 35% 65% / 52% 62% 38% 48%; transform: rotate(180deg) scale(1.05); } }
+@keyframes message-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes blink { 50% { opacity: .25; transform: scale(.7); } }
+@keyframes voice-wave { to { height: 2rem; opacity: .55; } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
