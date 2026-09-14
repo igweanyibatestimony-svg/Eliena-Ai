@@ -3,6 +3,12 @@ import { createConversation, getConversation, getDefaultUserId, listConversation
 
 const router = Router();
 
+function parseConversationId(value) {
+  return typeof value === 'string' && /^(?:0|[1-9]\d*)$/.test(value)
+    ? Number(value)
+    : null;
+}
+
 router.get('/', (request, response) => response.json({ conversations: listConversations(getDefaultUserId()) }));
 
 router.post('/', (request, response) => {
@@ -11,8 +17,8 @@ router.post('/', (request, response) => {
 });
 
 router.get('/:id/messages', (request, response) => {
-  const id = Number.parseInt(request.params.id, 10);
-  if (!Number.isInteger(id)) return response.status(400).json({ error: { code: 'INVALID_CONVERSATION', message: 'Invalid conversation.' } });
+  const id = parseConversationId(request.params.id);
+  if (!Number.isSafeInteger(id) || id < 1) return response.status(400).json({ error: { code: 'INVALID_CONVERSATION', message: 'Invalid conversation.' } });
   const userId = getDefaultUserId();
   if (!getConversation(id, userId)) return response.status(404).json({ error: { code: 'CONVERSATION_NOT_FOUND', message: 'Conversation not found.' } });
   return response.json({ messages: listMessages(id, userId) });

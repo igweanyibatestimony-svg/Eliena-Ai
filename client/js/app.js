@@ -9,11 +9,13 @@ let activeScreen = 'home';
 let conversationId = null;
 let chatMessages = [];
 let chatBusy = false;
+let memories = [];
 
-function render() {
-  app.innerHTML = appShell(activeScreen, chatMessages);
+function render({ loadHistory = true, loadMemories = true } = {}) {
+  app.innerHTML = appShell(activeScreen, chatMessages, memories);
   checkConnection();
-  if (activeScreen === 'chat' && conversationId) loadConversation();
+  if (loadHistory && activeScreen === 'chat' && conversationId) loadConversation();
+  if (loadMemories && activeScreen === 'memory') loadMemories();
 }
 
 function openVoiceMode() {
@@ -56,6 +58,7 @@ app.addEventListener('click', (event) => {
   if (target.dataset.action === 'stop-voice') { closeVoiceMode(); showToast('Voice mode is ready for Phase 4 connection.'); }
   if (target.dataset.action === 'cycle-state') cycleAssistantState(app);
   if (target.dataset.action === 'mock') showToast(`${target.dataset.label || 'This action'} is a Phase 3 visual placeholder.`);
+  if (target.dataset.action === 'delete-memory') deleteMemory(target.dataset.memoryId);
 });
 
 app.addEventListener('submit', (event) => {
@@ -73,10 +76,33 @@ async function loadConversation() {
     if (!response.ok) throw new Error('Conversation unavailable');
     const payload = await response.json();
     chatMessages = payload.messages || [];
-    if (activeScreen === 'chat' && !chatBusy) render();
+    if (activeScreen === 'chat' && !chatBusy) render({ loadHistory: false });
   } catch {
     conversationId = null;
     localStorage.removeItem('eliena.conversationId');
+  }
+}
+
+async function loadMemories() {
+  try {
+    const response = await fetch('/api/memories', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Memories unavailable');
+    const payload = await response.json();
+    memories = payload.memories || [];
+    if (activeScreen === 'memory') render({ loadMemories: false });
+  } catch {
+    if (activeScreen === 'memory') showToast('Memories are unavailable right now.');
+  }
+}
+
+async function deleteMemory(id) {
+  try {
+    const response = await fetch(`/api/memories/${id}`, { method: 'DELETE' });
+    if (!response.ok) throw new Error('Memory could not be deleted.');
+    memories = memories.filter((memory) => memory.id !== Number(id));
+    if (activeScreen === 'memory') render({ loadMemories: false });
+  } catch (error) {
+    showToast(error.message);
   }
 }
 
@@ -87,7 +113,10 @@ async function sendChatMessage(message, input) {
   const activity = app.querySelector('[data-tool-activity]');
   const status = app.querySelector('[data-chat-status]');
   const userBubble = document.createElement('article');
-  userBubble.className = 'message message--user'; userBubble.innerHTML = `<p>${message.replaceAll('&', '&amp;').replaceAll('<', '&lt;')}</p>`;
+  userBubble.className = 'message message--user';
+  const userText = document.createElement('p');
+  userText.textContent = message;
+  userBubble.append(userText);
   messagesElement.insertBefore(userBubble, activity);
   const assistantBubble = document.createElement('article');
   assistantBubble.className = 'message message--eliena'; assistantBubble.innerHTML = '<p class="message__meta">ELIENA</p><p data-stream-text></p>';
@@ -103,7 +132,7 @@ async function sendChatMessage(message, input) {
       if (event.type === 'error') { throw new Error(event.message || 'AI response failed.'); }
     }});
   } catch (error) {
-    assistantBubble.remove(); chatMessages = chatMessages.filter((entry) => !(entry.role === 'user' && entry.content === message)); status.textContent = 'Needs attention'; setAssistantState(app, 'error'); showToast(error.message);
+    assistantBubble.remove(); status.textContent = 'Needs attention'; setAssistantState(app, 'error'); showToast(error.message);
   } finally { chatBusy = false; activity.hidden = true; if (status.textContent !== 'Needs attention') { setAssistantState(app, 'idle'); status.textContent = 'Present and ready'; } }
 }
 

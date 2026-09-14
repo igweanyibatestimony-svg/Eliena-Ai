@@ -7,11 +7,12 @@ import { migrations } from './migrations/index.js';
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(currentDirectory, '../..');
-const databaseFile = path.isAbsolute(config.databasePath)
+const defaultDatabaseFile = path.isAbsolute(config.databasePath)
   ? config.databasePath
   : path.resolve(projectRoot, config.databasePath);
 
 let database;
+let databaseFile = defaultDatabaseFile;
 
 function applyMigrations(connection) {
   connection.exec(`
@@ -40,9 +41,10 @@ function applyMigrations(connection) {
   }
 }
 
-export function initializeDatabase() {
+export function initializeDatabase({ filePath } = {}) {
   if (database) return database;
 
+  if (filePath) databaseFile = path.resolve(filePath);
   fs.mkdirSync(path.dirname(databaseFile), { recursive: true });
   database = new DatabaseSync(databaseFile);
   database.exec('PRAGMA foreign_keys = ON;');
@@ -57,4 +59,11 @@ export function getDatabase() {
 
 export function getDatabasePath() {
   return databaseFile;
+}
+
+// Used by deterministic tests to isolate SQLite state from the local application database.
+export function closeDatabase() {
+  if (database) database.close();
+  database = undefined;
+  databaseFile = defaultDatabaseFile;
 }

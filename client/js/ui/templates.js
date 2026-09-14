@@ -6,6 +6,15 @@ export const navigation = [
   ['calendar', 'Calendar', 'calendar'], ['memory', 'Memory', 'memory'], ['files', 'Files', 'file'], ['settings', 'Settings', 'settings']
 ];
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
 function navItems(active, items = navigation) {
   return items.map(([id, label, glyph]) => `<button class="nav-item ${id === active ? 'is-active' : ''}" data-nav="${id}" aria-current="${id === active ? 'page' : 'false'}">${icon(glyph)}<span>${label}</span></button>`).join('');
 }
@@ -37,8 +46,19 @@ export function homeScreen() {
 }
 
 export function chatScreen(messages = []) {
-  const renderedMessages = messages.map((message) => `<article class="message message--${message.role === 'assistant' ? 'eliena' : message.role}">${message.role === 'assistant' ? '<p class="message__meta">ELIENA</p>' : ''}<p>${message.content}</p></article>`).join('');
+  const renderedMessages = messages.map((message) => {
+    const isAssistant = message.role === 'assistant';
+    const role = isAssistant ? 'eliena' : 'user';
+    return `<article class="message message--${role}">${isAssistant ? '<p class="message__meta">ELIENA</p>' : ''}<p>${escapeHtml(message.content)}</p></article>`;
+  }).join('');
   return `<section class="screen"><p class="eyebrow">CONVERSATION SPACE</p><h1 class="screen-title">Talk with Eliena.</h1><div class="chat-shell"><div class="chat-topline"><div class="presence"><span class="presence__mini"></span><div><strong>Eliena</strong><small data-chat-status>Present and ready</small></div></div><button class="icon-button" data-action="voice" aria-label="Open voice mode">${icon('mic')}</button></div><div class="messages" data-messages aria-label="Conversation messages">${renderedMessages}<div class="tool-activity" data-tool-activity><i class="tool-activity__pulse"></i><span>Assistant activity will appear here when Eliena works with your tools.</span></div></div><form class="composer" data-composer><button class="icon-button" type="button" data-action="mock" data-label="Attachments" aria-label="Attach a file">${icon('attachment')}</button><textarea aria-label="Message Eliena" placeholder="What would you like to explore?"></textarea><button class="icon-button" type="button" data-action="voice" aria-label="Start voice mode">${icon('mic')}</button><button class="send-button" aria-label="Send message">${icon('send')}</button></form></div></section>`;
+}
+
+export function memoryScreen(memories = []) {
+  const cards = memories.length
+    ? memories.map((memory) => `<article class="glass-card placeholder-card memory-card"><div class="brief-card__top"><span class="brief-card__icon">${icon('memory')}</span><p class="brief-card__label">${escapeHtml(memory.category)}</p></div><p>${escapeHtml(memory.content)}</p><div class="memory-card__footer"><small>Importance ${Math.round(Number(memory.importance || 0) * 100)}%</small><button class="section-link" data-action="delete-memory" data-memory-id="${memory.id}">Delete</button></div></article>`).join('')
+    : `<article class="glass-card placeholder-card"><span class="brief-card__icon">${icon('memory')}</span><h3>No saved memories yet</h3><p>When you share lasting preferences or profile details, Eliena can keep them here for future conversations.</p></article>`;
+  return `<section class="screen"><p class="eyebrow">MEMORY · PERSONAL CONTEXT</p><h1 class="screen-title">What Eliena remembers.</h1><p class="screen-subtitle">Saved long-term context is visible here. You can remove any memory at any time.</p><div class="placeholder-grid" data-memory-list>${cards}</div></section>`;
 }
 
 const screenDescriptions = {
@@ -59,7 +79,7 @@ export function voiceModal() {
   return `<div class="voice-modal" data-voice-modal role="dialog" aria-modal="true" aria-labelledby="voice-title"><section class="voice-card"><button class="icon-button" data-action="close-voice" aria-label="Close voice mode">×</button><div class="orb" data-voice-orb><span class="orb__pulse"></span></div><p class="eyebrow">VOICE MODE</p><h2 id="voice-title">Eliena is listening.</h2><p>This is the visual foundation for a future voice conversation.</p><div class="voice-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="voice-actions"><button class="button" data-action="close-voice">Cancel</button><button class="button button--primary" data-action="stop-voice">Stop listening</button></div></section></div>`;
 }
 
-export function appShell(activeScreen, messages = []) {
-  const content = activeScreen === 'home' ? homeScreen() : activeScreen === 'chat' ? chatScreen(messages) : placeholderScreen(activeScreen);
+export function appShell(activeScreen, messages = [], memories = []) {
+  const content = activeScreen === 'home' ? homeScreen() : activeScreen === 'chat' ? chatScreen(messages) : activeScreen === 'memory' ? memoryScreen(memories) : placeholderScreen(activeScreen);
   return `<div class="app-shell">${rail(activeScreen)}${topbar()}<main class="main-stage" id="main-stage">${content}</main><nav class="bottom-nav" aria-label="Primary navigation">${navItems(activeScreen, navigation.slice(0, 5))}</nav>${voiceModal()}</div>`;
 }

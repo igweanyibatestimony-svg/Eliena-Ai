@@ -5,13 +5,14 @@ import { config } from './config/env.js';
 import { initializeDatabase } from './db/database.js';
 import healthRouter from './routes/health.js';
 import conversationsRouter from './routes/conversations.js';
-import chatRouter from './routes/chat.js';
+import memoriesRouter from './routes/memories.js';
+import { createChatRouter } from './routes/chat.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const clientDirectory = path.resolve(currentDirectory, '../client');
 
-export function createApp() {
+export function createApp({ aiService } = {}) {
   const app = express();
 
   app.disable('x-powered-by');
@@ -26,7 +27,8 @@ export function createApp() {
 
   app.use('/api/health', healthRouter);
   app.use('/api/conversations', conversationsRouter);
-  app.use('/api/chat', chatRouter);
+  app.use('/api/memories', memoriesRouter);
+  app.use('/api/chat', createChatRouter({ aiService }));
   app.use(express.static(clientDirectory, { extensions: ['html'] }));
 
   app.use(notFoundHandler);

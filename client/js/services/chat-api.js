@@ -1,7 +1,11 @@
 function parseEvent(raw) {
-  const line = raw.split('\n').find((entry) => entry.startsWith('data:'));
-  if (!line) return null;
-  try { return JSON.parse(line.slice(5).trim()); } catch { return null; }
+  const data = raw
+    .split(/\r?\n/)
+    .filter((line) => line.startsWith('data:'))
+    .map((line) => line.slice(5).trimStart())
+    .join('\n');
+  if (!data) return null;
+  try { return JSON.parse(data); } catch { return null; }
 }
 
 export async function streamChat({ conversationId, message, onEvent }) {
@@ -20,7 +24,7 @@ export async function streamChat({ conversationId, message, onEvent }) {
   while (true) {
     const { value, done } = await reader.read();
     buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
-    const events = buffer.split('\n\n');
+    const events = buffer.split(/\r?\n\r?\n/);
     buffer = events.pop() || '';
     for (const raw of events) { const event = parseEvent(raw); if (event) onEvent(event); }
     if (done) break;
